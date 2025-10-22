@@ -14,18 +14,6 @@ This MCP server provides three tools to interact with your search history:
 - **get_recent_history**: Get the most recent browsing history entries
 - **get_most_visited**: Get your most frequently visited sites
 
-All tools support Brave, Chrome, Firefox, Safari, Microsoft Edge, Arc, Opera, and DuckDuckGo via an optional `browser` parameter.
-
-## Usage
-
-Example prompts:
-- "Search my Brave history for 'python tutorials'"
-- "Search my Firefox history for 'machine learning'"
-- "Show me my 20 most recent Safari browsing history entries"
-- "What are my top 10 most visited Arc sites?"
-- "Search my Opera history for 'web development'"
-- "Show me my recent DuckDuckGo browsing history"
-
 ## Install
 
 - Install [Claude Desktop](https://claude.ai/download)
@@ -35,27 +23,6 @@ Example prompts:
 - Install the MCP server: `fastmcp install claude-desktop mcp_server.py`
 - Restart Claude Desktop
 
-## MCP JSON Config
-
-If you prefer to configure manually, add this to your Claude Desktop MCP configuration:
-
-```json
-"Browser History Service": {
-  "command": "uv",
-  "args": [
-    "run",
-    "--with",
-    "fastmcp",
-    "fastmcp",
-    "run",
-    "/Users/ronantakizawa/Documents/projects/bravebrowser/mcp_server.py"
-  ],
-  "env": {},
-  "transport": "stdio"
-}
-```
-
-**Note**: Replace the path with your actual path to `mcp_server.py`
 
 ## Browser Support
 
