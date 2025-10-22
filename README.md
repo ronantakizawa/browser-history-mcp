@@ -3,7 +3,7 @@
 <img width="1024" height="512" alt="browser-histo (1)" src="https://github.com/user-attachments/assets/0556dcdd-63f1-4b79-83f9-0eeb71d25852" />
 
 
-Access and search your browser search history (Brave, Chrome, Firefox, Safari, Edge, Arc, Opera) through an MCP server for LLM chat apps.
+Access and search your browser search history (Brave, Chrome, Firefox, Safari, Edge, Arc, Opera, DuckDuckGo) through an MCP server for LLM chat apps.
 
 ## Features
 
@@ -13,7 +13,7 @@ This MCP server provides three tools to interact with your search history:
 - **get_recent_history**: Get the most recent browsing history entries
 - **get_most_visited**: Get your most frequently visited sites
 
-All tools support Brave, Chrome, Firefox, Safari, Microsoft Edge, Arc, and Opera via an optional `browser` parameter.
+All tools support Brave, Chrome, Firefox, Safari, Microsoft Edge, Arc, Opera, and DuckDuckGo via an optional `browser` parameter.
 
 ## Usage
 
@@ -23,13 +23,14 @@ Example prompts:
 - "Show me my 20 most recent Safari browsing history entries"
 - "What are my top 10 most visited Arc sites?"
 - "Search my Opera history for 'web development'"
+- "Show me my recent DuckDuckGo browsing history"
 
 ## Install
 
 - Install [Claude Desktop](https://claude.ai/download)
 - Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - Clone or navigate to this repository
-- Setup environment: `uv venv && uv pip install -r pyproject.toml && source .venv/bin/activate`
+- Setup environment: `uv venv && uv pip install -r pyproject.toml && uv pip install cryptography && source .venv/bin/activate`
 - Install the MCP server: `fastmcp install claude-desktop mcp_server.py`
 - Restart Claude Desktop
 
@@ -111,8 +112,24 @@ Safari is supported on macOS only:
    - For VS Code: Add Visual Studio Code.app
 4. Restart the application after granting access
 
+### DuckDuckGo Browser
+
+DuckDuckGo is supported on macOS only and uses encrypted storage:
+- **macOS**: `~/Library/Containers/com.duckduckgo.mobile.ios/Data/Library/Application Support/Database.sqlite`
+
+**Important**: DuckDuckGo stores history in encrypted format. This server:
+- Retrieves the encryption key from macOS Keychain (service: "DuckDuckGo Privacy Browser Encryption Key v2")
+- Decrypts URLs and titles using ChaCha20-Poly1305 encryption
+- Displays additional privacy metrics like trackers blocked per site
+
+**Permissions**: Similar to Safari, DuckDuckGo may require Full Disk Access permissions on macOS. Follow the same steps as Safari if you encounter permission errors.
+
+**Unique Features**: When querying DuckDuckGo history, you'll also see:
+- Number of trackers blocked per site
+- All standard browsing history information (visits, timestamps, etc.)
+
 The server automatically detects your operating system and uses the appropriate path for each browser.
 
 ## Privacy Note
 
-This server reads your local browser history databases in read-only mode. It creates temporary copies to avoid locking issues when browsers are running. No data is sent anywhere except to your local LLM chat application.
+This server reads your local browser history databases in read-only mode. It creates temporary copies to avoid locking issues when browsers are running. For DuckDuckGo, encryption keys are retrieved from your macOS Keychain and used only to decrypt your local history data. No data is sent anywhere except to your local LLM chat application.

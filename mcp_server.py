@@ -2,23 +2,121 @@ import sqlite3
 import os
 import shutil
 import tempfile
+import base64
+import subprocess
 from pathlib import Path
 from datetime import datetime
 from fastmcp import FastMCP
 from typing import Literal
+from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+import plistlib
 
 mcp = FastMCP("Browser History Service")
 
 
-def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera"] = "brave") -> Path:
+def get_duckduckgo_encryption_key():
+    """Retrieve the DuckDuckGo encryption key from macOS Keychain."""
+    try:
+        result = subprocess.run(
+            [
+                'security', 'find-generic-password',
+                '-s', 'DuckDuckGo Privacy Browser Encryption Key v2',
+                '-a', 'com.duckduckgo.mobile.ios',
+                '-w'
+            ],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        key_b64 = result.stdout.strip()
+        return base64.b64decode(key_b64)
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"Failed to retrieve DuckDuckGo encryption key from keychain: {e}")
+
+
+def decrypt_chacha_poly(encrypted_data: bytes, key: bytes) -> bytes:
+    """Decrypt data encrypted with ChaCha20-Poly1305."""
+    if not encrypted_data or len(encrypted_data) < 28:
+        raise ValueError("Encrypted data too short")
+
+    try:
+        chacha = ChaCha20Poly1305(key)
+        nonce = encrypted_data[:12]
+        ciphertext_with_tag = encrypted_data[12:]
+        plaintext = chacha.decrypt(nonce, ciphertext_with_tag, None)
+        return plaintext
+    except Exception as e:
+        raise Exception(f"Decryption failed: {e}")
+
+
+def decode_nskeyedarchiver(data: bytes) -> str:
+    """Decode NSKeyedArchiver data to get the original string or URL."""
+    try:
+        plist = plistlib.loads(data)
+        if isinstance(plist, dict) and '$objects' in plist:
+            objects = plist['$objects']
+            for obj in objects:
+                if isinstance(obj, str) and obj and obj != '$null':
+                    if obj.startswith('http') or obj.startswith('file'):
+                        return obj
+                    if len(obj) > 0 and not obj.startswith('NS'):
+                        return obj
+
+        text = data.decode('utf-8', errors='ignore')
+        parts = [p for p in text.split('\x00') if p and len(p) > 3 and not p.startswith('NS')]
+        if parts:
+            for part in sorted(parts, key=len, reverse=True):
+                if part.startswith('http') or part.startswith('file'):
+                    return part
+                if len(part) > 5 and part.isprintable():
+                    return part
+
+        return "[Could not decode]"
+    except Exception as e:
+        return f"[Decode error: {e}]"
+
+
+def decrypt_duckduckgo_field(encrypted_data: bytes, key: bytes) -> str:
+    """Decrypt and decode an encrypted DuckDuckGo field (URL or title)."""
+    if not encrypted_data:
+        return "[Empty]"
+
+    try:
+        decrypted_data = decrypt_chacha_poly(encrypted_data, key)
+        decoded_string = decode_nskeyedarchiver(decrypted_data)
+        return decoded_string
+    except Exception as e:
+        return f"[Error: {e}]"
+
+
+def cocoa_timestamp_to_datetime(cocoa_timestamp: float) -> str:
+    """Convert Cocoa/Apple timestamp to readable datetime."""
+    if not cocoa_timestamp or cocoa_timestamp == 0:
+        return "Never"
+
+    try:
+        mac_epoch = datetime(2001, 1, 1)
+        dt = datetime.fromtimestamp(mac_epoch.timestamp() + cocoa_timestamp)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except:
+        return "Invalid timestamp"
+
+
+def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera", "duckduckgo"] = "brave") -> Path:
     """
     Get the path to the browser history database.
     Handles cross-platform paths (Windows, macOS, Linux) for various browsers.
-    Safari only supported on macOS. Arc currently only on macOS.
+    Safari and DuckDuckGo only supported on macOS. Arc currently only on macOS.
 
     Args:
-        browser: Which browser to get history from ("brave", "safari", "chrome", "firefox", "edge", "arc", or "opera")
+        browser: Which browser to get history from ("brave", "safari", "chrome", "firefox", "edge", "arc", "opera", or "duckduckgo")
     """
+    if browser == "duckduckgo":
+        # DuckDuckGo only available on macOS
+        if os.uname().sysname != 'Darwin':
+            raise ValueError("DuckDuckGo is only available on macOS")
+        return Path.home() / "Library/Containers/com.duckduckgo.mobile.ios/Data/Library/Application Support/Database.sqlite"
+
     if browser == "safari":
         # Safari only available on macOS
         if os.uname().sysname != 'Darwin':
@@ -157,6 +255,81 @@ def query_history_db(query: str, params: tuple = (), browser: Literal["brave", "
             os.unlink(tmp_path)
 
 
+def query_duckduckgo_db(query: str, params: tuple = ()) -> list:
+    """
+    Query the DuckDuckGo history database with decryption support.
+    DuckDuckGo stores URLs and titles in encrypted format using ChaCha20-Poly1305.
+
+    Args:
+        query: SQL query to execute
+        params: Query parameters
+
+    Returns:
+        List of dictionaries with decrypted data
+    """
+    # Get encryption key
+    try:
+        key = get_duckduckgo_encryption_key()
+    except Exception as e:
+        raise Exception(f"Failed to get DuckDuckGo encryption key: {e}")
+
+    history_path = get_history_db_path("duckduckgo")
+
+    if not history_path.exists():
+        raise FileNotFoundError(f"DuckDuckGo history database not found at {history_path}")
+
+    # Create a temporary copy of the database to avoid locking issues
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp_file:
+        tmp_path = tmp_file.name
+
+    try:
+        shutil.copy2(history_path, tmp_path)
+    except PermissionError as e:
+        # Clean up temp file if copy failed
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise PermissionError(
+            f"Permission denied to access DuckDuckGo history.\n\n"
+            f"To fix this, grant Full Disk Access:\n"
+            f"1. Open System Settings > Privacy & Security > Full Disk Access\n"
+            f"2. Click the '+' button\n"
+            f"3. Add your terminal app (Terminal.app or iTerm.app) or IDE (VS Code, etc.)\n"
+            f"4. Restart the application"
+        ) from e
+
+    try:
+        # Query the temporary database
+        conn = sqlite3.connect(tmp_path)
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        raw_results = cursor.fetchall()
+        conn.close()
+
+        # Decrypt the results
+        decrypted_results = []
+        for row in raw_results:
+            # DuckDuckGo schema: ZURLENCRYPTED, ZTITLEENCRYPTED, ZNUMBEROFTOTALVISITS, ZNUMBEROFTRACKERSBLOCKED, ZLASTVISIT
+            url_encrypted, title_encrypted, visits, trackers_blocked, last_visit = row
+
+            # Decrypt URL and title
+            url = decrypt_duckduckgo_field(url_encrypted, key)
+            title = decrypt_duckduckgo_field(title_encrypted, key) if title_encrypted else "No title"
+
+            decrypted_results.append({
+                'url': url,
+                'title': title,
+                'visit_count': visits or 0,
+                'trackers_blocked': trackers_blocked or 0,
+                'last_visit_time': last_visit
+            })
+
+        return decrypted_results
+    finally:
+        # Clean up temporary file
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
 def chrome_timestamp_to_datetime(chrome_timestamp: int) -> str:
     """
     Convert Chrome/Brave timestamp (microseconds since 1601-01-01) to readable datetime.
@@ -208,14 +381,14 @@ def firefox_timestamp_to_datetime(firefox_timestamp: int) -> str:
 
 
 @mcp.tool
-def search_history(search_term: str, limit: int = 50, browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera"] = "brave") -> str:
+def search_history(search_term: str, limit: int = 50, browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera", "duckduckgo"] = "brave") -> str:
     """
     Search browser history for URLs and titles containing the search term.
 
     Args:
         search_term: The text to search for in URLs and page titles
         limit: Maximum number of results to return (default: 50, max: 500)
-        browser: Which browser to search ("brave", "safari", "chrome", "firefox", or "edge")
+        browser: Which browser to search ("brave", "safari", "chrome", "firefox", "edge", "arc", "opera", or "duckduckgo")
 
     Returns:
         Formatted list of matching history entries with titles, URLs, and visit times
@@ -223,7 +396,30 @@ def search_history(search_term: str, limit: int = 50, browser: Literal["brave", 
     if limit > 500:
         limit = 500
 
-    if browser == "safari":
+    if browser == "duckduckgo":
+        # DuckDuckGo database schema with encrypted fields
+        query = """
+            SELECT
+                ZURLENCRYPTED,
+                ZTITLEENCRYPTED,
+                ZNUMBEROFTOTALVISITS,
+                ZNUMBEROFTRACKERSBLOCKED,
+                ZLASTVISIT
+            FROM ZHISTORYENTRYMANAGEDOBJECT
+            WHERE ZURLENCRYPTED IS NOT NULL
+            ORDER BY ZLASTVISIT DESC
+            LIMIT ?
+        """
+        # DuckDuckGo needs special handling - decrypt first, then filter
+        all_results = query_duckduckgo_db(query, (limit * 2,))  # Get more results to account for filtering
+
+        # Filter results by search term after decryption
+        results = [
+            entry for entry in all_results
+            if search_term.lower() in entry['url'].lower() or search_term.lower() in entry['title'].lower()
+        ][:limit]
+
+    elif browser == "safari":
         # Safari database schema
         query = """
         SELECT
@@ -262,8 +458,10 @@ def search_history(search_term: str, limit: int = 50, browser: Literal["brave", 
         LIMIT ?
         """
 
-    search_pattern = f"%{search_term}%"
-    results = query_history_db(query, (search_pattern, search_pattern, limit), browser)
+    # Query databases (DuckDuckGo already queried above)
+    if browser != "duckduckgo":
+        search_pattern = f"%{search_term}%"
+        results = query_history_db(query, (search_pattern, search_pattern, limit), browser)
 
     if not results:
         return f"No history entries found matching '{search_term}' in {browser.capitalize()}"
@@ -275,29 +473,43 @@ def search_history(search_term: str, limit: int = 50, browser: Literal["brave", 
         url = entry['url']
         visit_count = entry['visit_count']
 
-        if browser == "safari":
+        if browser == "duckduckgo":
+            last_visit = cocoa_timestamp_to_datetime(entry['last_visit_time'])
+            trackers_blocked = entry.get('trackers_blocked', 0)
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Trackers blocked: {trackers_blocked} | Last visited: {last_visit}")
+            output.append("")
+        elif browser == "safari":
             last_visit = safari_timestamp_to_datetime(entry['last_visit_time'])
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
+            output.append("")
         elif browser == "firefox":
             last_visit = firefox_timestamp_to_datetime(entry['last_visit_time'])
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
+            output.append("")
         else:
             last_visit = chrome_timestamp_to_datetime(entry['last_visit_time'])
-
-        output.append(f"{i}. {title}")
-        output.append(f"   URL: {url}")
-        output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
-        output.append("")
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
+            output.append("")
 
     return "\n".join(output)
 
 
 @mcp.tool
-def get_recent_history(limit: int = 50, browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera"] = "brave") -> str:
+def get_recent_history(limit: int = 50, browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera", "duckduckgo"] = "brave") -> str:
     """
     Get the most recent browsing history entries.
 
     Args:
         limit: Maximum number of results to return (default: 50, max: 500)
-        browser: Which browser to query ("brave", "safari", "chrome", "firefox", "edge", "arc", or "opera")
+        browser: Which browser to query ("brave", "safari", "chrome", "firefox", "edge", "arc", "opera", or "duckduckgo")
 
     Returns:
         Formatted list of recent history entries with titles, URLs, and visit times
@@ -305,7 +517,23 @@ def get_recent_history(limit: int = 50, browser: Literal["brave", "safari", "chr
     if limit > 500:
         limit = 500
 
-    if browser == "safari":
+    if browser == "duckduckgo":
+        # DuckDuckGo database schema with encrypted fields
+        query = """
+            SELECT
+                ZURLENCRYPTED,
+                ZTITLEENCRYPTED,
+                ZNUMBEROFTOTALVISITS,
+                ZNUMBEROFTRACKERSBLOCKED,
+                ZLASTVISIT
+            FROM ZHISTORYENTRYMANAGEDOBJECT
+            WHERE ZURLENCRYPTED IS NOT NULL
+            ORDER BY ZLASTVISIT DESC
+            LIMIT ?
+        """
+        results = query_duckduckgo_db(query, (limit,))
+
+    elif browser == "safari":
         # Safari database schema
         query = """
         SELECT
@@ -339,7 +567,9 @@ def get_recent_history(limit: int = 50, browser: Literal["brave", "safari", "chr
         LIMIT ?
         """
 
-    results = query_history_db(query, (limit,), browser)
+    # Query databases (DuckDuckGo already queried above)
+    if browser != "duckduckgo":
+        results = query_history_db(query, (limit,), browser)
 
     if not results:
         return f"No history entries found in {browser.capitalize()}"
@@ -351,29 +581,43 @@ def get_recent_history(limit: int = 50, browser: Literal["brave", "safari", "chr
         url = entry['url']
         visit_count = entry['visit_count']
 
-        if browser == "safari":
+        if browser == "duckduckgo":
+            last_visit = cocoa_timestamp_to_datetime(entry['last_visit_time'])
+            trackers_blocked = entry.get('trackers_blocked', 0)
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Trackers blocked: {trackers_blocked} | Last visited: {last_visit}")
+            output.append("")
+        elif browser == "safari":
             last_visit = safari_timestamp_to_datetime(entry['last_visit_time'])
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
+            output.append("")
         elif browser == "firefox":
             last_visit = firefox_timestamp_to_datetime(entry['last_visit_time'])
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
+            output.append("")
         else:
             last_visit = chrome_timestamp_to_datetime(entry['last_visit_time'])
-
-        output.append(f"{i}. {title}")
-        output.append(f"   URL: {url}")
-        output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
-        output.append("")
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
+            output.append("")
 
     return "\n".join(output)
 
 
 @mcp.tool
-def get_most_visited(limit: int = 20, browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera"] = "brave") -> str:
+def get_most_visited(limit: int = 20, browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera", "duckduckgo"] = "brave") -> str:
     """
     Get the most frequently visited sites from browser history.
 
     Args:
         limit: Maximum number of results to return (default: 20, max: 100)
-        browser: Which browser to query ("brave", "safari", "chrome", "firefox", "edge", "arc", or "opera")
+        browser: Which browser to query ("brave", "safari", "chrome", "firefox", "edge", "arc", "opera", or "duckduckgo")
 
     Returns:
         Formatted list of most visited sites with visit counts
@@ -381,7 +625,23 @@ def get_most_visited(limit: int = 20, browser: Literal["brave", "safari", "chrom
     if limit > 100:
         limit = 100
 
-    if browser == "safari":
+    if browser == "duckduckgo":
+        # DuckDuckGo database schema with encrypted fields
+        query = """
+            SELECT
+                ZURLENCRYPTED,
+                ZTITLEENCRYPTED,
+                ZNUMBEROFTOTALVISITS,
+                ZNUMBEROFTRACKERSBLOCKED,
+                ZLASTVISIT
+            FROM ZHISTORYENTRYMANAGEDOBJECT
+            WHERE ZURLENCRYPTED IS NOT NULL AND ZNUMBEROFTOTALVISITS > 1
+            ORDER BY ZNUMBEROFTOTALVISITS DESC
+            LIMIT ?
+        """
+        results = query_duckduckgo_db(query, (limit,))
+
+    elif browser == "safari":
         # Safari database schema
         query = """
         SELECT
@@ -417,7 +677,9 @@ def get_most_visited(limit: int = 20, browser: Literal["brave", "safari", "chrom
         LIMIT ?
         """
 
-    results = query_history_db(query, (limit,), browser)
+    # Query databases (DuckDuckGo already queried above)
+    if browser != "duckduckgo":
+        results = query_history_db(query, (limit,), browser)
 
     if not results:
         return f"No frequently visited sites found in {browser.capitalize()}"
@@ -429,17 +691,31 @@ def get_most_visited(limit: int = 20, browser: Literal["brave", "safari", "chrom
         url = entry['url']
         visit_count = entry['visit_count']
 
-        if browser == "safari":
+        if browser == "duckduckgo":
+            last_visit = cocoa_timestamp_to_datetime(entry['last_visit_time'])
+            trackers_blocked = entry.get('trackers_blocked', 0)
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Trackers blocked: {trackers_blocked} | Last visited: {last_visit}")
+            output.append("")
+        elif browser == "safari":
             last_visit = safari_timestamp_to_datetime(entry['last_visit_time'])
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
+            output.append("")
         elif browser == "firefox":
             last_visit = firefox_timestamp_to_datetime(entry['last_visit_time'])
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
+            output.append("")
         else:
             last_visit = chrome_timestamp_to_datetime(entry['last_visit_time'])
-
-        output.append(f"{i}. {title}")
-        output.append(f"   URL: {url}")
-        output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
-        output.append("")
+            output.append(f"{i}. {title}")
+            output.append(f"   URL: {url}")
+            output.append(f"   Visits: {visit_count} | Last visited: {last_visit}")
+            output.append("")
 
     return "\n".join(output)
 
