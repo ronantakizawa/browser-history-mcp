@@ -1,10 +1,10 @@
-# browser-history-mcp
+# search-history-mcp
 
-Access and search your browser history (Brave, Chrome, Firefox, Safari, Edge) through an MCP server for LLM chat apps.
+Access and search your browser search history (Brave, Chrome, Firefox, Safari, Edge) through an MCP server for LLM chat apps.
 
 ## Features
 
-This MCP server provides three tools to interact with your browser history:
+This MCP server provides three tools to interact with your search history:
 
 - **search_history**: Search for specific terms in URLs and page titles
 - **get_recent_history**: Get the most recent browsing history entries
