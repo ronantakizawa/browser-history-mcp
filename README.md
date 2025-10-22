@@ -1,5 +1,8 @@
 # search-history-mcp
 
+<img width="1024" height="512" alt="browser-histo (1)" src="https://github.com/user-attachments/assets/0556dcdd-63f1-4b79-83f9-0eeb71d25852" />
+
+
 Access and search your browser search history (Brave, Chrome, Firefox, Safari, Edge, Arc, Opera) through an MCP server for LLM chat apps.
 
 ## Features
