@@ -10,14 +10,14 @@ from typing import Literal
 mcp = FastMCP("Browser History Service")
 
 
-def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox", "edge"] = "brave") -> Path:
+def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera"] = "brave") -> Path:
     """
     Get the path to the browser history database.
     Handles cross-platform paths (Windows, macOS, Linux) for various browsers.
-    Safari only supported on macOS.
+    Safari only supported on macOS. Arc currently only on macOS.
 
     Args:
-        browser: Which browser to get history from ("brave", "safari", "chrome", "firefox", or "edge")
+        browser: Which browser to get history from ("brave", "safari", "chrome", "firefox", "edge", "arc", or "opera")
     """
     if browser == "safari":
         # Safari only available on macOS
@@ -42,6 +42,22 @@ def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox",
             history_path = Path.home() / "Library" / "Application Support" / "Microsoft Edge" / "Default" / "History"
         else:  # Linux
             history_path = Path.home() / ".config" / "microsoft-edge" / "Default" / "History"
+
+    elif browser == "arc":
+        # Arc Browser (Chromium-based, currently macOS only)
+        if os.uname().sysname == 'Darwin':  # macOS
+            history_path = Path.home() / "Library" / "Application Support" / "Arc" / "User Data" / "Default" / "History"
+        else:
+            raise ValueError("Arc browser is currently only available on macOS")
+
+    elif browser == "opera":
+        # Opera (Chromium-based)
+        if os.name == 'nt':  # Windows
+            history_path = Path.home() / "AppData" / "Roaming" / "Opera Software" / "Opera Stable" / "History"
+        elif os.uname().sysname == 'Darwin':  # macOS
+            history_path = Path.home() / "Library" / "Application Support" / "com.operasoftware.Opera" / "Default" / "History"
+        else:  # Linux
+            history_path = Path.home() / ".config" / "opera" / "Default" / "History"
 
     elif browser == "firefox":
         # Firefox uses a different structure with profile folders
@@ -86,7 +102,7 @@ def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox",
     return history_path
 
 
-def query_history_db(query: str, params: tuple = (), browser: Literal["brave", "safari", "chrome", "firefox", "edge"] = "brave") -> list:
+def query_history_db(query: str, params: tuple = (), browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera"] = "brave") -> list:
     """
     Query the browser history database safely by creating a temporary copy.
     The database may be locked if browser is running, so we copy it first.
@@ -94,7 +110,7 @@ def query_history_db(query: str, params: tuple = (), browser: Literal["brave", "
     Args:
         query: SQL query to execute
         params: Query parameters
-        browser: Which browser to query ("brave", "safari", "chrome", "firefox", or "edge")
+        browser: Which browser to query ("brave", "safari", "chrome", "firefox", "edge", "arc", or "opera")
     """
     history_path = get_history_db_path(browser)
 
@@ -192,7 +208,7 @@ def firefox_timestamp_to_datetime(firefox_timestamp: int) -> str:
 
 
 @mcp.tool
-def search_history(search_term: str, limit: int = 50, browser: Literal["brave", "safari", "chrome", "firefox", "edge"] = "brave") -> str:
+def search_history(search_term: str, limit: int = 50, browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera"] = "brave") -> str:
     """
     Search browser history for URLs and titles containing the search term.
 
@@ -237,7 +253,7 @@ def search_history(search_term: str, limit: int = 50, browser: Literal["brave", 
         LIMIT ?
         """
     else:
-        # Chromium-based browsers (Brave/Chrome/Edge) database schema
+        # Chromium-based browsers (Brave/Chrome/Edge/Arc/Opera) database schema
         query = """
         SELECT url, title, visit_count, last_visit_time
         FROM urls
@@ -275,13 +291,13 @@ def search_history(search_term: str, limit: int = 50, browser: Literal["brave", 
 
 
 @mcp.tool
-def get_recent_history(limit: int = 50, browser: Literal["brave", "safari", "chrome", "firefox", "edge"] = "brave") -> str:
+def get_recent_history(limit: int = 50, browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera"] = "brave") -> str:
     """
     Get the most recent browsing history entries.
 
     Args:
         limit: Maximum number of results to return (default: 50, max: 500)
-        browser: Which browser to query ("brave", "safari", "chrome", "firefox", or "edge")
+        browser: Which browser to query ("brave", "safari", "chrome", "firefox", "edge", "arc", or "opera")
 
     Returns:
         Formatted list of recent history entries with titles, URLs, and visit times
@@ -315,7 +331,7 @@ def get_recent_history(limit: int = 50, browser: Literal["brave", "safari", "chr
         LIMIT ?
         """
     else:
-        # Chromium-based browsers (Brave/Chrome/Edge) database schema
+        # Chromium-based browsers (Brave/Chrome/Edge/Arc/Opera) database schema
         query = """
         SELECT url, title, visit_count, last_visit_time
         FROM urls
@@ -351,13 +367,13 @@ def get_recent_history(limit: int = 50, browser: Literal["brave", "safari", "chr
 
 
 @mcp.tool
-def get_most_visited(limit: int = 20, browser: Literal["brave", "safari", "chrome", "firefox", "edge"] = "brave") -> str:
+def get_most_visited(limit: int = 20, browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera"] = "brave") -> str:
     """
     Get the most frequently visited sites from browser history.
 
     Args:
         limit: Maximum number of results to return (default: 20, max: 100)
-        browser: Which browser to query ("brave", "safari", "chrome", "firefox", or "edge")
+        browser: Which browser to query ("brave", "safari", "chrome", "firefox", "edge", "arc", or "opera")
 
     Returns:
         Formatted list of most visited sites with visit counts

@@ -1,6 +1,6 @@
 # search-history-mcp
 
-Access and search your browser search history (Brave, Chrome, Firefox, Safari, Edge) through an MCP server for LLM chat apps.
+Access and search your browser search history (Brave, Chrome, Firefox, Safari, Edge, Arc, Opera) through an MCP server for LLM chat apps.
 
 ## Features
 
@@ -10,7 +10,7 @@ This MCP server provides three tools to interact with your search history:
 - **get_recent_history**: Get the most recent browsing history entries
 - **get_most_visited**: Get your most frequently visited sites
 
-All tools support Brave, Chrome, Firefox, Safari, and Microsoft Edge browsers via an optional `browser` parameter.
+All tools support Brave, Chrome, Firefox, Safari, Microsoft Edge, Arc, and Opera via an optional `browser` parameter.
 
 ## Usage
 
@@ -18,7 +18,8 @@ Example prompts:
 - "Search my Brave history for 'python tutorials'"
 - "Search my Firefox history for 'machine learning'"
 - "Show me my 20 most recent Safari browsing history entries"
-- "What are my top 10 most visited Edge sites?"
+- "What are my top 10 most visited Arc sites?"
+- "Search my Opera history for 'web development'"
 
 ## Install
 
@@ -71,6 +72,16 @@ All Chromium-based browsers share the same database format and work across all p
 - **Windows**: `%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\History`
 - **macOS**: `~/Library/Application Support/Microsoft Edge/Default/History`
 - **Linux**: `~/.config/microsoft-edge/Default/History`
+
+#### Arc Browser
+- **macOS**: `~/Library/Application Support/Arc/User Data/Default/History`
+
+**Note**: Arc is currently only available on macOS.
+
+#### Opera
+- **Windows**: `%APPDATA%\Opera Software\Opera Stable\History`
+- **macOS**: `~/Library/Application Support/com.operasoftware.Opera/Default/History`
+- **Linux**: `~/.config/opera/Default/History`
 
 ### Firefox
 
