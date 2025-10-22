@@ -1,6 +1,6 @@
 # browser-history-mcp
 
-Access and search your Brave and Safari browser history through an MCP server for LLM chat apps.
+Access and search your browser history (Brave, Chrome, Firefox, Safari, Edge) through an MCP server for LLM chat apps.
 
 ## Features
 
@@ -10,15 +10,15 @@ This MCP server provides three tools to interact with your browser history:
 - **get_recent_history**: Get the most recent browsing history entries
 - **get_most_visited**: Get your most frequently visited sites
 
-All tools support both Brave and Safari browsers via an optional `browser` parameter.
+All tools support Brave, Chrome, Firefox, Safari, and Microsoft Edge browsers via an optional `browser` parameter.
 
 ## Usage
 
 Example prompts:
 - "Search my Brave history for 'python tutorials'"
-- "Search my Safari history for 'machine learning'"
+- "Search my Firefox history for 'machine learning'"
 - "Show me my 20 most recent Safari browsing history entries"
-- "What are my top 10 most visited Brave sites?"
+- "What are my top 10 most visited Edge sites?"
 
 ## Install
 
@@ -53,13 +53,37 @@ If you prefer to configure manually, add this to your Claude Desktop MCP configu
 
 ## Browser Support
 
-### Brave Browser
-The server supports Brave on all platforms:
+### Chromium-Based Browsers
+
+All Chromium-based browsers share the same database format and work across all platforms.
+
+#### Brave Browser
 - **Windows**: `%LOCALAPPDATA%\BraveSoftware\Brave-Browser\User Data\Default\History`
 - **macOS**: `~/Library/Application Support/BraveSoftware/Brave-Browser/Default/History`
 - **Linux**: `~/.config/BraveSoftware/Brave-Browser/Default/History`
 
+#### Google Chrome
+- **Windows**: `%LOCALAPPDATA%\Google\Chrome\User Data\Default\History`
+- **macOS**: `~/Library/Application Support/Google/Chrome/Default/History`
+- **Linux**: `~/.config/google-chrome/Default/History`
+
+#### Microsoft Edge
+- **Windows**: `%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\History`
+- **macOS**: `~/Library/Application Support/Microsoft Edge/Default/History`
+- **Linux**: `~/.config/microsoft-edge/Default/History`
+
+### Firefox
+
+Firefox uses a different database structure with profile folders:
+
+- **Windows**: `%APPDATA%\Mozilla\Firefox\Profiles\[profile].default-release\places.sqlite`
+- **macOS**: `~/Library/Application Support/Firefox/Profiles/[profile].default-release/places.sqlite`
+- **Linux**: `~/.mozilla/firefox/[profile].default-release/places.sqlite`
+
+**Note**: Firefox stores history in `places.sqlite`. The server automatically detects your active profile folder (prioritizing `.default-release` over `.default`).
+
 ### Safari Browser
+
 Safari is supported on macOS only:
 - **macOS**: `~/Library/Safari/History.db`
 
