@@ -1,19 +1,26 @@
+# Use Python 3.10 base image.
 FROM python:3.10-slim
 
-# Set the working directory inside the container
+# Install system dependencies.
+RUN apt-get update && \
+    apt-get install -y curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install the 'uv' CLI.
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Make sure 'uv' is on PATH.
+ENV PATH="/root/.local/bin:${PATH}"
+
+# Set the working directory.
 WORKDIR /app
 
-# Copy the requirements file and install dependencies
-# This step is often done separately to leverage Docker's build cache
+# Copy and install only requirements first (caching).
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN uv pip install --system -r requirements.txt
 
-# Copy the entire application code into the container
+# Now copy everything from the current directory into /app.
 COPY . .
 
-# Expose the port your MCP server listens on (e.g., 8080)
-EXPOSE 8080
-
-# Define the command to run your MCP server
-# Replace 'your_mcp_server.py' with the actual name of your server script
-CMD ["python", "mcp_server.py"]
+# Run the server.
+CMD ["uv", "run", "mcp_server.py"]
