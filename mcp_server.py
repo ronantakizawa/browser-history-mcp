@@ -125,13 +125,30 @@ def find_windows_store_app_path(app_name: str) -> Path:
         # Search for matching package directory
         for package in packages_dir.iterdir():
             if app_name.lower() in package.name.lower():
-                # Search for History file in this package
+                # Collect all History files, then prioritize
+                history_files = []
                 for history_file in package.rglob("History"):
                     if history_file.is_file():
-                        # Accept if path contains "User Data" (Arc) or "EBWebView" (DuckDuckGo)
                         path_str = str(history_file)
                         if "User Data" in path_str or "EBWebView" in path_str:
-                            return history_file
+                            history_files.append(history_file)
+
+                if not history_files:
+                    continue
+
+                # For DuckDuckGo: prefer EBWebView over internalEnvironment\EBWebView
+                # For Arc: prefer User Data path
+                if app_name.lower() == "duckduckgo":
+                    # Prioritize the non-internal path
+                    for hf in history_files:
+                        if "internalEnvironment" not in str(hf):
+                            return hf
+                    # Fallback to any EBWebView path
+                    return history_files[0]
+                else:
+                    # For Arc and others, return first match
+                    return history_files[0]
+
     except Exception:
         pass
 
