@@ -1,4 +1,165 @@
-Share these paths with me:
+PS C:\Users\r_takizawa\search-history-mcp> python3 .\check_all_tables.py
+================================================================================
+CHECKING ALL DUCKDUCKGO TABLES FOR BROWSING HISTORY
+================================================================================
 
-DuckDuckGo: C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\LocalState\internalEnvironment\EBWebView\Default\History
-Arc: C:\Users\r_takizawa\AppData\Local\Packages\TheBrowserCompany.Arc_ttt1ap7aakyb4\LocalCache\Local\Arc\User Data\Default\History
+📁 Database: C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\LocalState\internalEnvironment\EBWebView\Default\History
+
+================================================================================
+CHECKING 'visits' TABLE
+================================================================================
+
+📊 Total rows in 'visits' table: 5
+
+📋 'visits' table schema:
+   - id (INTEGER)
+   - url (INTEGER)
+   - visit_time (INTEGER)
+   - from_visit (INTEGER)
+   - external_referrer_url (TEXT)
+   - transition (INTEGER)
+   - segment_id (INTEGER)
+   - visit_duration (INTEGER)
+   - incremented_omnibox_typed_score (BOOLEAN)
+   - opener_visit (INTEGER)
+   - originator_cache_guid (TEXT)
+   - originator_visit_id (INTEGER)
+   - originator_from_visit (INTEGER)
+   - originator_opener_visit (INTEGER)
+   - is_known_to_sync (BOOLEAN)
+   - consider_for_ntp_most_visited (BOOLEAN)
+   - visited_link_id (INTEGER)
+   - app_id (TEXT)
+
+📖 Sample visits (up to 20):
+
+1. Visit ID: 5
+   id: 5
+   url: 1
+   visit_time: 13405666854693206
+   from_visit: 0
+   external_referrer_url:
+   transition: 838860801
+   segment_id: 1
+   visit_duration: 0
+   incremented_omnibox_typed_score: 1
+   opener_visit: 0
+   originator_cache_guid:
+   originator_visit_id: 0
+   originator_from_visit: 0
+   originator_opener_visit: 0
+   is_known_to_sync: 0
+   consider_for_ntp_most_visited: 1
+   visited_link_id: 0
+   app_id:
+
+2. Visit ID: 4
+   id: 4
+   url: 2
+   visit_time: 13405666854283652
+   from_visit: 0
+   external_referrer_url:
+   transition: 838860801
+   segment_id: 2
+   visit_duration: 0
+   incremented_omnibox_typed_score: 1
+   opener_visit: 0
+   originator_cache_guid:
+   originator_visit_id: 0
+   originator_from_visit: 0
+   originator_opener_visit: 0
+   is_known_to_sync: 0
+   consider_for_ntp_most_visited: 1
+   visited_link_id: 0
+   app_id:
+
+3. Visit ID: 3
+   id: 3
+   url: 1
+   visit_time: 13405664683714231
+   from_visit: 0
+   external_referrer_url:
+   transition: 838860801
+   segment_id: 1
+   visit_duration: 2137330450
+   incremented_omnibox_typed_score: 1
+   opener_visit: 0
+   originator_cache_guid:
+   originator_visit_id: 0
+   originator_from_visit: 0
+   originator_opener_visit: 0
+   is_known_to_sync: 0
+   consider_for_ntp_most_visited: 1
+   visited_link_id: 0
+   app_id:
+
+4. Visit ID: 2
+   id: 2
+   url: 2
+   visit_time: 13405664683374732
+   from_visit: 0
+   external_referrer_url:
+   transition: 838860801
+   segment_id: 2
+   visit_duration: 2137987053
+   incremented_omnibox_typed_score: 1
+   opener_visit: 0
+   originator_cache_guid:
+   originator_visit_id: 0
+   originator_from_visit: 0
+   originator_opener_visit: 0
+   is_known_to_sync: 0
+   consider_for_ntp_most_visited: 1
+   visited_link_id: 0
+   app_id:
+
+5. Visit ID: 1
+   id: 1
+   url: 1
+   visit_time: 13405663495478532
+   from_visit: 0
+   external_referrer_url:
+   transition: 838860801
+   segment_id: 1
+   visit_duration: 711136409
+   incremented_omnibox_typed_score: 1
+   opener_visit: 0
+   originator_cache_guid:
+   originator_visit_id: 0
+   originator_from_visit: 0
+   originator_opener_visit: 0
+   is_known_to_sync: 0
+   consider_for_ntp_most_visited: 1
+   visited_link_id: 0
+   app_id:
+
+================================================================================
+CHECKING URL-VISIT RELATIONSHIP
+================================================================================
+
+📊 Found 2 URLs with visit data:
+
+1. 🏠 DuckDuckGo
+   URL: https://static.ddg.local/Dashboard/Views/Html/html/windows.html
+   Visit count (urls table): 3
+   Actual visits (visits table): 3
+
+2. 🏠 New Tab Page
+   URL: https://static.ddg.local/Application/NewTabPage/Html/index.html
+   Visit count (urls table): 2
+   Actual visits (visits table): 2
+
+================================================================================
+CHECKING EDGE TABLES
+================================================================================
+
+📊 edge_urls table: 0 rows
+📊 edge_visits table: 0 rows
+
+================================================================================
+CHECKING FOR BROWSING DATA IN OTHER LOCATIONS
+================================================================================
+
+📊 visited_links table: 0 rows
+
+📊 keyword_search_terms table: 0 rows
