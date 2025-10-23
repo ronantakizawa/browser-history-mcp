@@ -12,7 +12,7 @@ from typing import Literal
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 import plistlib
 
-mcp = FastMCP("Browser History Service")
+mcp = FastMCP("search-history-mcp")
 
 
 def get_duckduckgo_encryption_key():
