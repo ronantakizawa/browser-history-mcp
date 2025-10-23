@@ -1,0 +1,4 @@
+Share these paths with me:
+
+DuckDuckGo: C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\LocalState\internalEnvironment\EBWebView\Default\History
+Arc: C:\Users\r_takizawa\AppData\Local\Packages\TheBrowserCompany.Arc_ttt1ap7aakyb4\LocalCache\Local\Arc\User Data\Default\History
