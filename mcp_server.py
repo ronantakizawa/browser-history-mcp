@@ -152,7 +152,7 @@ def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox",
     elif browser == "opera":
         # Opera (Chromium-based)
         if os.name == 'nt':  # Windows
-            history_path = Path.home() / "AppData" / "Roaming" / "Opera Software" / "Opera Stable" / "History"
+            history_path = Path.home() / "AppData" / "Roaming" / "Opera Software" / "Opera Stable" / "Default" / "History"
         elif platform.system() == 'Darwin':  # macOS
             history_path = Path.home() / "Library" / "Application Support" / "com.operasoftware.Opera" / "Default" / "History"
         else:  # Linux
@@ -335,50 +335,55 @@ def chrome_timestamp_to_datetime(chrome_timestamp: int) -> str:
     """
     Convert Chrome/Brave timestamp (microseconds since 1601-01-01) to readable datetime.
     """
-    if chrome_timestamp == 0:
+    if not chrome_timestamp or chrome_timestamp == 0:
         return "Never"
 
-    # Chrome timestamps are in microseconds since January 1, 1601
-    epoch_start = datetime(1601, 1, 1)
-    delta = chrome_timestamp / 1_000_000  # Convert to seconds
-
     try:
-        dt = datetime.fromtimestamp(epoch_start.timestamp() + delta)
+        # Chrome timestamps are in microseconds since January 1, 1601
+        # Windows epoch: January 1, 1601
+        # Convert to Unix epoch (January 1, 1970)
+        # The offset is 11644473600 seconds between 1601 and 1970
+        unix_timestamp = (chrome_timestamp / 1_000_000) - 11644473600
+
+        # Validate timestamp is in reasonable range
+        if unix_timestamp < 0 or unix_timestamp > 2147483647:  # Max 32-bit timestamp
+            return "Invalid timestamp"
+
+        dt = datetime.fromtimestamp(unix_timestamp)
         return dt.strftime("%Y-%m-%d %H:%M:%S")
-    except:
-        return "Invalid timestamp"
+    except (ValueError, OSError, OverflowError) as e:
+        return f"Invalid timestamp ({chrome_timestamp})"
 
 
 def safari_timestamp_to_datetime(safari_timestamp: float) -> str:
     """
     Convert Safari timestamp (seconds since 2001-01-01) to readable datetime.
     """
-    if safari_timestamp == 0:
+    if not safari_timestamp or safari_timestamp == 0:
         return "Never"
 
-    # Safari timestamps are seconds since January 1, 2001 (macOS epoch)
-    mac_epoch = datetime(2001, 1, 1)
-
     try:
+        # Safari timestamps are seconds since January 1, 2001 (macOS epoch)
+        mac_epoch = datetime(2001, 1, 1)
         dt = datetime.fromtimestamp(mac_epoch.timestamp() + safari_timestamp)
         return dt.strftime("%Y-%m-%d %H:%M:%S")
-    except:
-        return "Invalid timestamp"
+    except (ValueError, OSError, OverflowError):
+        return f"Invalid timestamp ({safari_timestamp})"
 
 
 def firefox_timestamp_to_datetime(firefox_timestamp: int) -> str:
     """
     Convert Firefox timestamp (microseconds since 1970-01-01) to readable datetime.
     """
-    if firefox_timestamp == 0 or firefox_timestamp is None:
+    if not firefox_timestamp or firefox_timestamp == 0:
         return "Never"
 
-    # Firefox timestamps are in microseconds since January 1, 1970 (Unix epoch)
     try:
+        # Firefox timestamps are in microseconds since January 1, 1970 (Unix epoch)
         dt = datetime.fromtimestamp(firefox_timestamp / 1_000_000)
         return dt.strftime("%Y-%m-%d %H:%M:%S")
-    except:
-        return "Invalid timestamp"
+    except (ValueError, OSError, OverflowError):
+        return f"Invalid timestamp ({firefox_timestamp})"
 
 
 @mcp.tool
