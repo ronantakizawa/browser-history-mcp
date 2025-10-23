@@ -24,11 +24,14 @@ def test_os_detection():
         return False
 
 
-def display_browser_history(browser_name, limit=10):
+def display_browser_history(browser_name, limit=10, custom_path=None):
     """Display recent history from a specific browser."""
     try:
         # Import the underlying functions, not the MCP tools
         from mcp_server import query_history_db, chrome_timestamp_to_datetime, firefox_timestamp_to_datetime, safari_timestamp_to_datetime
+        import sqlite3
+        import tempfile
+        import shutil
 
         print(f"\n{'=' * 80}")
         print(f"📖 {browser_name.upper()} - Recent History (Last {limit} entries)")
@@ -53,7 +56,25 @@ def display_browser_history(browser_name, limit=10):
             LIMIT ?
             """
 
-        results = query_history_db(query, (limit,), browser_name)
+        # If custom path provided (Windows Store apps), query directly
+        if custom_path:
+            # Create temporary copy to avoid locking
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp_file:
+                tmp_path = tmp_file.name
+
+            try:
+                shutil.copy2(custom_path, tmp_path)
+                conn = sqlite3.connect(tmp_path)
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                cursor.execute(query, (limit,))
+                results = [dict(row) for row in cursor.fetchall()]
+                conn.close()
+            finally:
+                if Path(tmp_path).exists():
+                    Path(tmp_path).unlink()
+        else:
+            results = query_history_db(query, (limit,), browser_name)
 
         if not results:
             print(f"No history entries found in {browser_name.capitalize()}")
@@ -105,12 +126,25 @@ def test_browser_paths_and_history():
     results = []
     browsers_with_history = []
 
+    # Windows Store app paths (override default paths for these browsers)
+    store_app_paths = {
+        'duckduckgo': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\LocalState\internalEnvironment\EBWebView\Default\History"),
+        'arc': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\TheBrowserCompany.Arc_ttt1ap7aakyb4\LocalCache\Local\Arc\User Data\Default\History"),
+    }
+
     for browser in browsers:
         try:
-            path = get_history_db_path(browser)
+            # Use Windows Store app path if available, otherwise use standard path
+            if browser in store_app_paths:
+                path = store_app_paths[browser]
+                is_store_app = True
+            else:
+                path = get_history_db_path(browser)
+                is_store_app = False
+
             exists = path.exists()
 
-            print(f"\n{browser.upper()}:")
+            print(f"\n{browser.upper()}{' (Windows Store App)' if is_store_app else ''}:")
             print(f"  Path: {path}")
             print(f"  File exists: {'✅ Yes' if exists else '❌ No'}")
 
@@ -152,7 +186,9 @@ def test_browser_paths_and_history():
         print("Displaying recent history from each browser...\n")
 
         for browser in browsers_with_history:
-            display_browser_history(browser, limit=5)
+            # Use custom path if it's a Windows Store app
+            custom_path = store_app_paths.get(browser)
+            display_browser_history(browser, limit=5, custom_path=custom_path)
     else:
         print("\n⚠️  No browsers with accessible history found.")
 
@@ -167,9 +203,18 @@ def test_search_functionality():
 
     try:
         from mcp_server import query_history_db, get_history_db_path, chrome_timestamp_to_datetime, firefox_timestamp_to_datetime
+        import sqlite3
+        import tempfile
+        import shutil
     except ImportError as e:
         print(f"❌ Error importing: {e}")
         return False
+
+    # Windows Store app paths
+    store_app_paths = {
+        'duckduckgo': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\LocalState\internalEnvironment\EBWebView\Default\History"),
+        'arc': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\TheBrowserCompany.Arc_ttt1ap7aakyb4\LocalCache\Local\Arc\User Data\Default\History"),
+    }
 
     browsers = ['brave', 'chrome', 'edge', 'firefox', 'opera', 'arc', 'duckduckgo']
     search_term = input("\nEnter a search term to find in your browser history (or press Enter to skip): ").strip()
@@ -182,8 +227,12 @@ def test_search_functionality():
 
     for browser in browsers:
         try:
-            # Check if browser has history first
-            path = get_history_db_path(browser)
+            # Use custom path if Windows Store app
+            if browser in store_app_paths:
+                path = store_app_paths[browser]
+            else:
+                path = get_history_db_path(browser)
+
             if not path.exists() or not path.is_file():
                 continue
 
@@ -211,7 +260,23 @@ def test_search_functionality():
                 LIMIT ?
                 """
 
-            results = query_history_db(query, (search_pattern, search_pattern, 5), browser)
+            # Query with custom path if Windows Store app
+            if browser in store_app_paths:
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp_file:
+                    tmp_path = tmp_file.name
+                try:
+                    shutil.copy2(path, tmp_path)
+                    conn = sqlite3.connect(tmp_path)
+                    conn.row_factory = sqlite3.Row
+                    cursor = conn.cursor()
+                    cursor.execute(query, (search_pattern, search_pattern, 5))
+                    results = [dict(row) for row in cursor.fetchall()]
+                    conn.close()
+                finally:
+                    if Path(tmp_path).exists():
+                        Path(tmp_path).unlink()
+            else:
+                results = query_history_db(query, (search_pattern, search_pattern, 5), browser)
 
             if not results:
                 print(f"No history entries found matching '{search_term}' in {browser.capitalize()}")
@@ -281,16 +346,29 @@ def test_most_visited():
 
     try:
         from mcp_server import query_history_db, get_history_db_path, chrome_timestamp_to_datetime, firefox_timestamp_to_datetime
+        import sqlite3
+        import tempfile
+        import shutil
     except ImportError as e:
         print(f"❌ Error importing: {e}")
         return False
+
+    # Windows Store app paths
+    store_app_paths = {
+        'duckduckgo': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\LocalState\internalEnvironment\EBWebView\Default\History"),
+        'arc': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\TheBrowserCompany.Arc_ttt1ap7aakyb4\LocalCache\Local\Arc\User Data\Default\History"),
+    }
 
     browsers = ['brave', 'chrome', 'edge', 'firefox', 'opera', 'arc', 'duckduckgo']
 
     for browser in browsers:
         try:
-            # Check if browser has history first
-            path = get_history_db_path(browser)
+            # Use custom path if Windows Store app
+            if browser in store_app_paths:
+                path = store_app_paths[browser]
+            else:
+                path = get_history_db_path(browser)
+
             if not path.exists() or not path.is_file():
                 continue
 
@@ -317,7 +395,23 @@ def test_most_visited():
                 LIMIT ?
                 """
 
-            results = query_history_db(query, (5,), browser)
+            # Query with custom path if Windows Store app
+            if browser in store_app_paths:
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp_file:
+                    tmp_path = tmp_file.name
+                try:
+                    shutil.copy2(path, tmp_path)
+                    conn = sqlite3.connect(tmp_path)
+                    conn.row_factory = sqlite3.Row
+                    cursor = conn.cursor()
+                    cursor.execute(query, (5,))
+                    results = [dict(row) for row in cursor.fetchall()]
+                    conn.close()
+                finally:
+                    if Path(tmp_path).exists():
+                        Path(tmp_path).unlink()
+            else:
+                results = query_history_db(query, (5,), browser)
 
             if not results:
                 print(f"No frequently visited sites found in {browser.capitalize()}")
