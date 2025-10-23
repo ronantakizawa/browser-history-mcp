@@ -116,7 +116,7 @@ def test_browser_paths_and_history():
     print("=" * 80)
 
     try:
-        from mcp_server import get_history_db_path
+        from mcp_server import get_history_db_path, find_windows_store_app_path
     except ImportError as e:
         print(f"❌ Error importing mcp_server: {e}")
         print("Make sure mcp_server.py is in the same directory.")
@@ -125,19 +125,20 @@ def test_browser_paths_and_history():
     browsers = ['brave', 'chrome', 'edge', 'firefox', 'opera', 'arc', 'duckduckgo']
     results = []
     browsers_with_history = []
-
-    # Windows Store app paths (override default paths for these browsers)
-    store_app_paths = {
-        'duckduckgo': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\LocalState\internalEnvironment\EBWebView\Default\History"),
-        'arc': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\TheBrowserCompany.Arc_ttt1ap7aakyb4\LocalCache\Local\Arc\User Data\Default\History"),
-    }
+    store_app_paths = {}
 
     for browser in browsers:
         try:
-            # Use Windows Store app path if available, otherwise use standard path
-            if browser in store_app_paths:
-                path = store_app_paths[browser]
-                is_store_app = True
+            # For Arc and DuckDuckGo, try to find Windows Store app path first
+            if browser in ['arc', 'duckduckgo']:
+                store_path = find_windows_store_app_path(browser.title())
+                if store_path:
+                    path = store_path
+                    is_store_app = True
+                    store_app_paths[browser] = path
+                else:
+                    path = get_history_db_path(browser)
+                    is_store_app = False
             else:
                 path = get_history_db_path(browser)
                 is_store_app = False
@@ -202,19 +203,13 @@ def test_search_functionality():
     print("=" * 80)
 
     try:
-        from mcp_server import query_history_db, get_history_db_path, chrome_timestamp_to_datetime, firefox_timestamp_to_datetime
+        from mcp_server import query_history_db, get_history_db_path, find_windows_store_app_path, chrome_timestamp_to_datetime, firefox_timestamp_to_datetime
         import sqlite3
         import tempfile
         import shutil
     except ImportError as e:
         print(f"❌ Error importing: {e}")
         return False
-
-    # Windows Store app paths
-    store_app_paths = {
-        'duckduckgo': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\LocalState\internalEnvironment\EBWebView\Default\History"),
-        'arc': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\TheBrowserCompany.Arc_ttt1ap7aakyb4\LocalCache\Local\Arc\User Data\Default\History"),
-    }
 
     browsers = ['brave', 'chrome', 'edge', 'firefox', 'opera', 'arc', 'duckduckgo']
     search_term = input("\nEnter a search term to find in your browser history (or press Enter to skip): ").strip()
@@ -227,9 +222,10 @@ def test_search_functionality():
 
     for browser in browsers:
         try:
-            # Use custom path if Windows Store app
-            if browser in store_app_paths:
-                path = store_app_paths[browser]
+            # For Arc and DuckDuckGo, try to find Windows Store app path first
+            if browser in ['arc', 'duckduckgo']:
+                store_path = find_windows_store_app_path(browser.title())
+                path = store_path if store_path else get_history_db_path(browser)
             else:
                 path = get_history_db_path(browser)
 
@@ -260,23 +256,8 @@ def test_search_functionality():
                 LIMIT ?
                 """
 
-            # Query with custom path if Windows Store app
-            if browser in store_app_paths:
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp_file:
-                    tmp_path = tmp_file.name
-                try:
-                    shutil.copy2(path, tmp_path)
-                    conn = sqlite3.connect(tmp_path)
-                    conn.row_factory = sqlite3.Row
-                    cursor = conn.cursor()
-                    cursor.execute(query, (search_pattern, search_pattern, 5))
-                    results = [dict(row) for row in cursor.fetchall()]
-                    conn.close()
-                finally:
-                    if Path(tmp_path).exists():
-                        Path(tmp_path).unlink()
-            else:
-                results = query_history_db(query, (search_pattern, search_pattern, 5), browser)
+            # Always use query_history_db which handles temp file creation
+            results = query_history_db(query, (search_pattern, search_pattern, 5), browser)
 
             if not results:
                 print(f"No history entries found matching '{search_term}' in {browser.capitalize()}")
@@ -345,7 +326,7 @@ def test_most_visited():
     print("=" * 80)
 
     try:
-        from mcp_server import query_history_db, get_history_db_path, chrome_timestamp_to_datetime, firefox_timestamp_to_datetime
+        from mcp_server import query_history_db, get_history_db_path, find_windows_store_app_path, chrome_timestamp_to_datetime, firefox_timestamp_to_datetime
         import sqlite3
         import tempfile
         import shutil
@@ -353,19 +334,14 @@ def test_most_visited():
         print(f"❌ Error importing: {e}")
         return False
 
-    # Windows Store app paths
-    store_app_paths = {
-        'duckduckgo': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\LocalState\internalEnvironment\EBWebView\Default\History"),
-        'arc': Path(r"C:\Users\r_takizawa\AppData\Local\Packages\TheBrowserCompany.Arc_ttt1ap7aakyb4\LocalCache\Local\Arc\User Data\Default\History"),
-    }
-
     browsers = ['brave', 'chrome', 'edge', 'firefox', 'opera', 'arc', 'duckduckgo']
 
     for browser in browsers:
         try:
-            # Use custom path if Windows Store app
-            if browser in store_app_paths:
-                path = store_app_paths[browser]
+            # For Arc and DuckDuckGo, try to find Windows Store app path first
+            if browser in ['arc', 'duckduckgo']:
+                store_path = find_windows_store_app_path(browser.title())
+                path = store_path if store_path else get_history_db_path(browser)
             else:
                 path = get_history_db_path(browser)
 
@@ -395,23 +371,8 @@ def test_most_visited():
                 LIMIT ?
                 """
 
-            # Query with custom path if Windows Store app
-            if browser in store_app_paths:
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp_file:
-                    tmp_path = tmp_file.name
-                try:
-                    shutil.copy2(path, tmp_path)
-                    conn = sqlite3.connect(tmp_path)
-                    conn.row_factory = sqlite3.Row
-                    cursor = conn.cursor()
-                    cursor.execute(query, (5,))
-                    results = [dict(row) for row in cursor.fetchall()]
-                    conn.close()
-                finally:
-                    if Path(tmp_path).exists():
-                        Path(tmp_path).unlink()
-            else:
-                results = query_history_db(query, (5,), browser)
+            # Always use query_history_db which handles temp file creation
+            results = query_history_db(query, (5,), browser)
 
             if not results:
                 print(f"No frequently visited sites found in {browser.capitalize()}")
