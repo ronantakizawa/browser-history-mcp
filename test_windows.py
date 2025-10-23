@@ -27,14 +27,55 @@ def test_os_detection():
 def display_browser_history(browser_name, limit=10):
     """Display recent history from a specific browser."""
     try:
-        from mcp_server import get_recent_history
+        # Import the underlying functions, not the MCP tools
+        from mcp_server import query_history_db, chrome_timestamp_to_datetime, firefox_timestamp_to_datetime, safari_timestamp_to_datetime
 
         print(f"\n{'=' * 80}")
         print(f"📖 {browser_name.upper()} - Recent History (Last {limit} entries)")
         print('=' * 80)
 
-        result = get_recent_history(limit=limit, browser=browser_name)
-        print(result)
+        if browser_name == "firefox":
+            query = """
+            SELECT
+                url, title, visit_count,
+                last_visit_date as last_visit_time
+            FROM moz_places
+            WHERE hidden = 0
+            ORDER BY last_visit_time DESC
+            LIMIT ?
+            """
+        else:
+            # Chromium-based browsers
+            query = """
+            SELECT url, title, visit_count, last_visit_time
+            FROM urls
+            ORDER BY last_visit_time DESC
+            LIMIT ?
+            """
+
+        results = query_history_db(query, (limit,), browser_name)
+
+        if not results:
+            print(f"No history entries found in {browser_name.capitalize()}")
+            return False
+
+        print(f"Most recent {len(results)} {browser_name.capitalize()} browsing history entries:\n")
+
+        for i, entry in enumerate(results, 1):
+            title = entry['title'] or "No title"
+            url = entry['url']
+            visit_count = entry['visit_count']
+
+            if browser_name == "firefox":
+                last_visit = firefox_timestamp_to_datetime(entry['last_visit_time'])
+            else:
+                last_visit = chrome_timestamp_to_datetime(entry['last_visit_time'])
+
+            print(f"{i}. {title}")
+            print(f"   URL: {url}")
+            print(f"   Visits: {visit_count} | Last visited: {last_visit}")
+            print()
+
         return True
 
     except FileNotFoundError as e:
@@ -125,7 +166,7 @@ def test_search_functionality():
     print("=" * 80)
 
     try:
-        from mcp_server import search_history, get_history_db_path
+        from mcp_server import query_history_db, get_history_db_path, chrome_timestamp_to_datetime, firefox_timestamp_to_datetime
     except ImportError as e:
         print(f"❌ Error importing: {e}")
         return False
@@ -136,6 +177,8 @@ def test_search_functionality():
     if not search_term:
         print("⏭️  Skipping search test")
         return True
+
+    search_pattern = f"%{search_term}%"
 
     for browser in browsers:
         try:
@@ -148,8 +191,48 @@ def test_search_functionality():
             print(f"🔍 Searching {browser.upper()} for: '{search_term}'")
             print('=' * 80)
 
-            result = search_history(search_term, limit=5, browser=browser)
-            print(result)
+            if browser == "firefox":
+                query = """
+                SELECT
+                    url, title, visit_count,
+                    last_visit_date as last_visit_time
+                FROM moz_places
+                WHERE (url LIKE ? OR title LIKE ?)
+                AND hidden = 0
+                ORDER BY last_visit_time DESC
+                LIMIT ?
+                """
+            else:
+                query = """
+                SELECT url, title, visit_count, last_visit_time
+                FROM urls
+                WHERE url LIKE ? OR title LIKE ?
+                ORDER BY last_visit_time DESC
+                LIMIT ?
+                """
+
+            results = query_history_db(query, (search_pattern, search_pattern, 5), browser)
+
+            if not results:
+                print(f"No history entries found matching '{search_term}' in {browser.capitalize()}")
+                continue
+
+            print(f"Found {len(results)} {browser.capitalize()} history entries matching '{search_term}':\n")
+
+            for i, entry in enumerate(results, 1):
+                title = entry['title'] or "No title"
+                url = entry['url']
+                visit_count = entry['visit_count']
+
+                if browser == "firefox":
+                    last_visit = firefox_timestamp_to_datetime(entry['last_visit_time'])
+                else:
+                    last_visit = chrome_timestamp_to_datetime(entry['last_visit_time'])
+
+                print(f"{i}. {title}")
+                print(f"   URL: {url}")
+                print(f"   Visits: {visit_count} | Last visited: {last_visit}")
+                print()
 
         except Exception as e:
             print(f"⚠️  Could not search {browser}: {e}")
@@ -197,7 +280,7 @@ def test_most_visited():
     print("=" * 80)
 
     try:
-        from mcp_server import get_most_visited, get_history_db_path
+        from mcp_server import query_history_db, get_history_db_path, chrome_timestamp_to_datetime, firefox_timestamp_to_datetime
     except ImportError as e:
         print(f"❌ Error importing: {e}")
         return False
@@ -215,8 +298,47 @@ def test_most_visited():
             print(f"⭐ {browser.upper()} - Top 5 Most Visited Sites")
             print('=' * 80)
 
-            result = get_most_visited(limit=5, browser=browser)
-            print(result)
+            if browser == "firefox":
+                query = """
+                SELECT
+                    url, title, visit_count,
+                    last_visit_date as last_visit_time
+                FROM moz_places
+                WHERE hidden = 0 AND visit_count > 1
+                ORDER BY visit_count DESC
+                LIMIT ?
+                """
+            else:
+                query = """
+                SELECT url, title, visit_count, last_visit_time
+                FROM urls
+                WHERE visit_count > 1
+                ORDER BY visit_count DESC
+                LIMIT ?
+                """
+
+            results = query_history_db(query, (5,), browser)
+
+            if not results:
+                print(f"No frequently visited sites found in {browser.capitalize()}")
+                continue
+
+            print(f"Top {len(results)} most visited {browser.capitalize()} sites:\n")
+
+            for i, entry in enumerate(results, 1):
+                title = entry['title'] or "No title"
+                url = entry['url']
+                visit_count = entry['visit_count']
+
+                if browser == "firefox":
+                    last_visit = firefox_timestamp_to_datetime(entry['last_visit_time'])
+                else:
+                    last_visit = chrome_timestamp_to_datetime(entry['last_visit_time'])
+
+                print(f"{i}. {title}")
+                print(f"   URL: {url}")
+                print(f"   Visits: {visit_count} | Last visited: {last_visit}")
+                print()
 
         except Exception as e:
             print(f"⚠️  Could not get most visited for {browser}: {e}")
