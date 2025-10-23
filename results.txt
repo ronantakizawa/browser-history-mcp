@@ -1,165 +1,89 @@
-PS C:\Users\r_takizawa\search-history-mcp> python3 .\check_all_tables.py
+PS C:\Users\r_takizawa\search-history-mcp> python3 find_all_duckduckgo_dbs.py
 ================================================================================
-CHECKING ALL DUCKDUCKGO TABLES FOR BROWSING HISTORY
-================================================================================
-
-📁 Database: C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\LocalState\internalEnvironment\EBWebView\Default\History
-
-================================================================================
-CHECKING 'visits' TABLE
+SEARCHING FOR ALL DUCKDUCKGO DATABASE FILES
 ================================================================================
 
-📊 Total rows in 'visits' table: 5
-
-📋 'visits' table schema:
-   - id (INTEGER)
-   - url (INTEGER)
-   - visit_time (INTEGER)
-   - from_visit (INTEGER)
-   - external_referrer_url (TEXT)
-   - transition (INTEGER)
-   - segment_id (INTEGER)
-   - visit_duration (INTEGER)
-   - incremented_omnibox_typed_score (BOOLEAN)
-   - opener_visit (INTEGER)
-   - originator_cache_guid (TEXT)
-   - originator_visit_id (INTEGER)
-   - originator_from_visit (INTEGER)
-   - originator_opener_visit (INTEGER)
-   - is_known_to_sync (BOOLEAN)
-   - consider_for_ntp_most_visited (BOOLEAN)
-   - visited_link_id (INTEGER)
-   - app_id (TEXT)
-
-📖 Sample visits (up to 20):
-
-1. Visit ID: 5
-   id: 5
-   url: 1
-   visit_time: 13405666854693206
-   from_visit: 0
-   external_referrer_url:
-   transition: 838860801
-   segment_id: 1
-   visit_duration: 0
-   incremented_omnibox_typed_score: 1
-   opener_visit: 0
-   originator_cache_guid:
-   originator_visit_id: 0
-   originator_from_visit: 0
-   originator_opener_visit: 0
-   is_known_to_sync: 0
-   consider_for_ntp_most_visited: 1
-   visited_link_id: 0
-   app_id:
-
-2. Visit ID: 4
-   id: 4
-   url: 2
-   visit_time: 13405666854283652
-   from_visit: 0
-   external_referrer_url:
-   transition: 838860801
-   segment_id: 2
-   visit_duration: 0
-   incremented_omnibox_typed_score: 1
-   opener_visit: 0
-   originator_cache_guid:
-   originator_visit_id: 0
-   originator_from_visit: 0
-   originator_opener_visit: 0
-   is_known_to_sync: 0
-   consider_for_ntp_most_visited: 1
-   visited_link_id: 0
-   app_id:
-
-3. Visit ID: 3
-   id: 3
-   url: 1
-   visit_time: 13405664683714231
-   from_visit: 0
-   external_referrer_url:
-   transition: 838860801
-   segment_id: 1
-   visit_duration: 2137330450
-   incremented_omnibox_typed_score: 1
-   opener_visit: 0
-   originator_cache_guid:
-   originator_visit_id: 0
-   originator_from_visit: 0
-   originator_opener_visit: 0
-   is_known_to_sync: 0
-   consider_for_ntp_most_visited: 1
-   visited_link_id: 0
-   app_id:
-
-4. Visit ID: 2
-   id: 2
-   url: 2
-   visit_time: 13405664683374732
-   from_visit: 0
-   external_referrer_url:
-   transition: 838860801
-   segment_id: 2
-   visit_duration: 2137987053
-   incremented_omnibox_typed_score: 1
-   opener_visit: 0
-   originator_cache_guid:
-   originator_visit_id: 0
-   originator_from_visit: 0
-   originator_opener_visit: 0
-   is_known_to_sync: 0
-   consider_for_ntp_most_visited: 1
-   visited_link_id: 0
-   app_id:
-
-5. Visit ID: 1
-   id: 1
-   url: 1
-   visit_time: 13405663495478532
-   from_visit: 0
-   external_referrer_url:
-   transition: 838860801
-   segment_id: 1
-   visit_duration: 711136409
-   incremented_omnibox_typed_score: 1
-   opener_visit: 0
-   originator_cache_guid:
-   originator_visit_id: 0
-   originator_from_visit: 0
-   originator_opener_visit: 0
-   is_known_to_sync: 0
-   consider_for_ntp_most_visited: 1
-   visited_link_id: 0
-   app_id:
+📁 Searching in: C:\Users\r_takizawa\AppData\Local\Packages
 
 ================================================================================
-CHECKING URL-VISIT RELATIONSHIP
+📦 Package: DuckDuckGo.DesktopBrowser_ya2fgkz3nks94
 ================================================================================
 
-📊 Found 2 URLs with visit data:
+🔍 Searching for database files...
 
-1. 🏠 DuckDuckGo
-   URL: https://static.ddg.local/Dashboard/Views/Html/html/windows.html
-   Visit count (urls table): 3
-   Actual visits (visits table): 3
+📊 Found 13 database file(s):
 
-2. 🏠 New Tab Page
-   URL: https://static.ddg.local/Application/NewTabPage/Html/index.html
-   Visit count (urls table): 2
-   Actual visits (visits table): 2
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\browser-v1.db
+   Size: 155,648 bytes (152.0 KB)
+   ⚠️  Cannot read as SQLite database
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\dbp-v1.db
+   Size: 135,168 bytes (132.0 KB)
+   ⚠️  Cannot read as SQLite database
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\EBWebView\Default\EdgeEDrop\EdgeEDropSQLite.db
+   Size: 32,768 bytes (32.0 KB)
+   📋 Tables: messages, meta
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\EBWebView\Default\heavy_ad_intervention_opt_out.db
+   Size: 16,384 bytes (16.0 KB)
+   📋 Tables: previews_v1, enabled_previews_v1
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\EBWebView\Default\History
+   Size: 204,800 bytes (200.0 KB)
+   📋 Tables: meta, urls, sqlite_sequence
+      (and 2 more...)
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\event-v1.db
+   Size: 24,576 bytes (24.0 KB)
+   ⚠️  Cannot read as SQLite database
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\favicons-v1.db
+   Size: 106,496 bytes (104.0 KB)
+   ⚠️  Cannot read as SQLite database
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\internalEnvironment\EBWebView\Default\EdgeEDrop\EdgeEDropSQLite.db
+   Size: 32,768 bytes (32.0 KB)
+   📋 Tables: messages, meta
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\internalEnvironment\EBWebView\Default\heavy_ad_intervention_opt_out.db
+   Size: 16,384 bytes (16.0 KB)
+   📋 Tables: previews_v1, enabled_previews_v1
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\internalEnvironment\EBWebView\Default\History
+   Size: 204,800 bytes (200.0 KB)
+   📋 Tables: meta, urls, sqlite_sequence
+      (and 2 more...)
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\subscription-v1.db
+   Size: 12,288 bytes (12.0 KB)
+   ⚠️  Cannot read as SQLite database
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\vault-v1.db
+   Size: 73,728 bytes (72.0 KB)
+   ⚠️  Cannot read as SQLite database
+
+────────────────────────────────────────────────────────────────────────────────
+📄 LocalState\vpn-v1.db
+   Size: 12,288 bytes (12.0 KB)
+   ⚠️  Cannot read as SQLite database
 
 ================================================================================
-CHECKING EDGE TABLES
-================================================================================
 
-📊 edge_urls table: 0 rows
-📊 edge_visits table: 0 rows
 
 ================================================================================
-CHECKING FOR BROWSING DATA IN OTHER LOCATIONS
+SEARCH COMPLETE
 ================================================================================
-
-📊 visited_links table: 0 rows
-
-📊 keyword_search_terms table: 0 rows
