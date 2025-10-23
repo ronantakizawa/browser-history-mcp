@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import platform
 import shutil
 import tempfile
 import base64
@@ -113,13 +114,13 @@ def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox",
     """
     if browser == "duckduckgo":
         # DuckDuckGo only available on macOS
-        if os.uname().sysname != 'Darwin':
+        if platform.system() != 'Darwin':
             raise ValueError("DuckDuckGo is only available on macOS")
         return Path.home() / "Library/Containers/com.duckduckgo.mobile.ios/Data/Library/Application Support/Database.sqlite"
 
     if browser == "safari":
         # Safari only available on macOS
-        if os.uname().sysname != 'Darwin':
+        if platform.system() != 'Darwin':
             raise ValueError("Safari is only available on macOS")
         return Path.home() / "Library" / "Safari" / "History.db"
 
@@ -127,7 +128,7 @@ def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox",
     if browser == "chrome":
         if os.name == 'nt':  # Windows
             history_path = Path.home() / "AppData" / "Local" / "Google" / "Chrome" / "User Data" / "Default" / "History"
-        elif os.uname().sysname == 'Darwin':  # macOS
+        elif platform.system() == 'Darwin':  # macOS
             history_path = Path.home() / "Library" / "Application Support" / "Google" / "Chrome" / "Default" / "History"
         else:  # Linux
             history_path = Path.home() / ".config" / "google-chrome" / "Default" / "History"
@@ -136,14 +137,14 @@ def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox",
         # Microsoft Edge (Chromium-based)
         if os.name == 'nt':  # Windows
             history_path = Path.home() / "AppData" / "Local" / "Microsoft" / "Edge" / "User Data" / "Default" / "History"
-        elif os.uname().sysname == 'Darwin':  # macOS
+        elif platform.system() == 'Darwin':  # macOS
             history_path = Path.home() / "Library" / "Application Support" / "Microsoft Edge" / "Default" / "History"
         else:  # Linux
             history_path = Path.home() / ".config" / "microsoft-edge" / "Default" / "History"
 
     elif browser == "arc":
         # Arc Browser (Chromium-based, currently macOS only)
-        if os.uname().sysname == 'Darwin':  # macOS
+        if platform.system() == 'Darwin':  # macOS
             history_path = Path.home() / "Library" / "Application Support" / "Arc" / "User Data" / "Default" / "History"
         else:
             raise ValueError("Arc browser is currently only available on macOS")
@@ -152,7 +153,7 @@ def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox",
         # Opera (Chromium-based)
         if os.name == 'nt':  # Windows
             history_path = Path.home() / "AppData" / "Roaming" / "Opera Software" / "Opera Stable" / "History"
-        elif os.uname().sysname == 'Darwin':  # macOS
+        elif platform.system() == 'Darwin':  # macOS
             history_path = Path.home() / "Library" / "Application Support" / "com.operasoftware.Opera" / "Default" / "History"
         else:  # Linux
             history_path = Path.home() / ".config" / "opera" / "Default" / "History"
@@ -161,7 +162,7 @@ def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox",
         # Firefox uses a different structure with profile folders
         if os.name == 'nt':  # Windows
             profiles_path = Path.home() / "AppData" / "Roaming" / "Mozilla" / "Firefox" / "Profiles"
-        elif os.uname().sysname == 'Darwin':  # macOS
+        elif platform.system() == 'Darwin':  # macOS
             profiles_path = Path.home() / "Library" / "Application Support" / "Firefox" / "Profiles"
         else:  # Linux
             profiles_path = Path.home() / ".mozilla" / "firefox"
@@ -192,7 +193,7 @@ def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox",
     else:  # brave
         if os.name == 'nt':  # Windows
             history_path = Path.home() / "AppData" / "Local" / "BraveSoftware" / "Brave-Browser" / "User Data" / "Default" / "History"
-        elif os.uname().sysname == 'Darwin':  # macOS
+        elif platform.system() == 'Darwin':  # macOS
             history_path = Path.home() / "Library" / "Application Support" / "BraveSoftware" / "Brave-Browser" / "Default" / "History"
         else:  # Linux
             history_path = Path.home() / ".config" / "BraveSoftware" / "Brave-Browser" / "Default" / "History"
