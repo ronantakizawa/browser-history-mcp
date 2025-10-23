@@ -47,6 +47,15 @@ def display_browser_history(browser_name, limit=10, custom_path=None):
             ORDER BY last_visit_time DESC
             LIMIT ?
             """
+        elif browser_name == "duckduckgo":
+            # DuckDuckGo - filter out internal pages
+            query = """
+            SELECT url, title, visit_count, last_visit_time
+            FROM urls
+            WHERE url NOT LIKE 'https://static.ddg.local/%'
+            ORDER BY last_visit_time DESC
+            LIMIT ?
+            """
         else:
             # Chromium-based browsers
             query = """
@@ -247,6 +256,15 @@ def test_search_functionality():
                 ORDER BY last_visit_time DESC
                 LIMIT ?
                 """
+            elif browser == "duckduckgo":
+                query = """
+                SELECT url, title, visit_count, last_visit_time
+                FROM urls
+                WHERE (url LIKE ? OR title LIKE ?)
+                AND url NOT LIKE 'https://static.ddg.local/%'
+                ORDER BY last_visit_time DESC
+                LIMIT ?
+                """
             else:
                 query = """
                 SELECT url, title, visit_count, last_visit_time
@@ -359,6 +377,15 @@ def test_most_visited():
                     last_visit_date as last_visit_time
                 FROM moz_places
                 WHERE hidden = 0 AND visit_count > 1
+                ORDER BY visit_count DESC
+                LIMIT ?
+                """
+            elif browser == "duckduckgo":
+                query = """
+                SELECT url, title, visit_count, last_visit_time
+                FROM urls
+                WHERE visit_count > 1
+                AND url NOT LIKE 'https://static.ddg.local/%'
                 ORDER BY visit_count DESC
                 LIMIT ?
                 """

@@ -489,7 +489,8 @@ def search_history(search_term: str, limit: int = 50, browser: Literal["brave", 
             query = """
             SELECT url, title, visit_count, last_visit_time
             FROM urls
-            WHERE url LIKE ? OR title LIKE ?
+            WHERE (url LIKE ? OR title LIKE ?)
+            AND url NOT LIKE 'https://static.ddg.local/%'
             ORDER BY last_visit_time DESC
             LIMIT ?
             """
@@ -624,6 +625,7 @@ def get_recent_history(limit: int = 50, browser: Literal["brave", "safari", "chr
             query = """
             SELECT url, title, visit_count, last_visit_time
             FROM urls
+            WHERE url NOT LIKE 'https://static.ddg.local/%'
             ORDER BY last_visit_time DESC
             LIMIT ?
             """
@@ -752,6 +754,7 @@ def get_most_visited(limit: int = 20, browser: Literal["brave", "safari", "chrom
             SELECT url, title, visit_count, last_visit_time
             FROM urls
             WHERE visit_count > 1
+            AND url NOT LIKE 'https://static.ddg.local/%'
             ORDER BY visit_count DESC
             LIMIT ?
             """
