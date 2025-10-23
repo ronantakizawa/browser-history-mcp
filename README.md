@@ -28,3 +28,5 @@ This MCP server provides three tools to interact with your search history:
 This server reads your local browser history databases in read-only mode. It creates temporary copies to avoid locking issues when browsers are running. For DuckDuckGo on macOS, encryption keys are retrieved from your macOS Keychain and used only to decrypt your local history data. No data is sent anywhere except to your local LLM chat application.
 
 **Browser Support**: Brave, Chrome, Edge, Opera, Arc, and DuckDuckGo are supported on Windows, macOS, and Linux. Firefox is supported on all platforms. Safari is macOS-only.
+
+Browser file paths may have to be manually configured depending on your file structures. 
