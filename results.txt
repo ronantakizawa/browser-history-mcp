@@ -1,89 +1,136 @@
-PS C:\Users\r_takizawa\search-history-mcp> python3 find_all_duckduckgo_dbs.py
+PS C:\Users\r_takizawa\search-history-mcp> python3  check_encrypted_dbs.py
 ================================================================================
-SEARCHING FOR ALL DUCKDUCKGO DATABASE FILES
+CHECKING ALL DUCKDUCKGO DATABASES (INCLUDING ENCRYPTED)
 ================================================================================
 
-📁 Searching in: C:\Users\r_takizawa\AppData\Local\Packages
+[STEP 1] Looking for encryption key...
+--------------------------------------------------------------------------------
+🔑 Found potential key file: C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\Settings\settings.dat
+   Size: 8192 bytes
+   First 32 bytes (hex): 72656766020000000200000062eb51e0ad37cd01010000000300000000000000
+⚠️  No encryption key found in expected locations
+   The encryption key might be:
+   1. Stored in Windows Credential Manager
+   2. Hardcoded in the DuckDuckGo application
+   3. Derived from a user/machine-specific value
 
-================================================================================
+[STEP 2] Checking all database files...
+--------------------------------------------------------------------------------
+
 📦 Package: DuckDuckGo.DesktopBrowser_ya2fgkz3nks94
-================================================================================
 
-🔍 Searching for database files...
-
-📊 Found 13 database file(s):
-
+📊 Found 13 potential database file(s)
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\browser-v1.db
    Size: 155,648 bytes (152.0 KB)
-   ⚠️  Cannot read as SQLite database
+      ❌ Error: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\R_TAKI~1\\AppData\\Local\\Temp\\tmphyxr0iue.db'
+   ⚠️  Not a SQLite database (might be encrypted at file level)
+   🔍 Header (hex): f001b5cb345019aec4291d0c7b44bed5
+   🔍 Header (ascii): b'\xf0\x01\xb5\xcb4P\x19\xae\xc4)\x1d\x0c{D\xbe\xd5'
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\dbp-v1.db
    Size: 135,168 bytes (132.0 KB)
-   ⚠️  Cannot read as SQLite database
+      ❌ Error: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\R_TAKI~1\\AppData\\Local\\Temp\\tmpbxd_bpaz.db'
+   ⚠️  Not a SQLite database (might be encrypted at file level)
+   🔍 Header (hex): 1e1bb371b75a8bcafc4674f99d383c61
+   🔍 Header (ascii): b'\x1e\x1b\xb3q\xb7Z\x8b\xca\xfcFt\xf9\x9d8<a'
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\EBWebView\Default\EdgeEDrop\EdgeEDropSQLite.db
    Size: 32,768 bytes (32.0 KB)
-   📋 Tables: messages, meta
+   ℹ️  SQLite database, but no browsing history found
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\EBWebView\Default\heavy_ad_intervention_opt_out.db
    Size: 16,384 bytes (16.0 KB)
-   📋 Tables: previews_v1, enabled_previews_v1
+   ℹ️  SQLite database, but no browsing history found
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\EBWebView\Default\History
    Size: 204,800 bytes (200.0 KB)
-   📋 Tables: meta, urls, sqlite_sequence
-      (and 2 more...)
+   ✅ ✅ ✅ FOUND BROWSING HISTORY! ✅ ✅ ✅
+   📊 Total URLs: 26
+   🌐 External websites: 26
+   🏠 Internal pages: 0
+
+   📖 Sample external URLs:
+
+   1. chaz nba - YouTube
+      https://www.youtube.com/results?search_query=chaz+nba
+
+   2. nba - YouTube
+      https://www.youtube.com/results?search_query=nba
+
+   3. WEMBY REVERSE DUNK🔥🔥🔥🔥🔥#wemby #nbabasketball #sanantoniospurs #fypシ゚viral #creativecontent - YouTube
+      https://www.youtube.com/shorts/QZ40JGnndmI
+
+   4. "Black Jaguar Asks A Man To Save Its Cub" #animals #rescue #wildlife - YouTube
+      https://www.youtube.com/shorts/j9XtcOQ5tiA
+
+   5. Donovan is on a HEATER 🔥 - YouTube
+      https://www.youtube.com/shorts/fuZfALYXbMU
+
+   🎯 THIS IS THE CORRECT DATABASE!
+   Full path: C:\Users\r_takizawa\AppData\Local\Packages\DuckDuckGo.DesktopBrowser_ya2fgkz3nks94\LocalState\EBWebView\Default\History
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\event-v1.db
    Size: 24,576 bytes (24.0 KB)
-   ⚠️  Cannot read as SQLite database
+      ❌ Error: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\R_TAKI~1\\AppData\\Local\\Temp\\tmppn7fvf8m.db'
+   ⚠️  Not a SQLite database (might be encrypted at file level)
+   🔍 Header (hex): fcbd0eb1c064d647176a4e28107028bf
+   🔍 Header (ascii): b'\xfc\xbd\x0e\xb1\xc0d\xd6G\x17jN(\x10p(\xbf'
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\favicons-v1.db
    Size: 106,496 bytes (104.0 KB)
-   ⚠️  Cannot read as SQLite database
+      ❌ Error: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\R_TAKI~1\\AppData\\Local\\Temp\\tmpga2qdwy9.db'
+   ⚠️  Not a SQLite database (might be encrypted at file level)
+   🔍 Header (hex): de23ceecd5528d66673441227a27cd2d
+   🔍 Header (ascii): b'\xde#\xce\xec\xd5R\x8dfg4A"z\'\xcd-'
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\internalEnvironment\EBWebView\Default\EdgeEDrop\EdgeEDropSQLite.db
    Size: 32,768 bytes (32.0 KB)
-   📋 Tables: messages, meta
+   ℹ️  SQLite database, but no browsing history found
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\internalEnvironment\EBWebView\Default\heavy_ad_intervention_opt_out.db
    Size: 16,384 bytes (16.0 KB)
-   📋 Tables: previews_v1, enabled_previews_v1
+   ℹ️  SQLite database, but no browsing history found
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\internalEnvironment\EBWebView\Default\History
    Size: 204,800 bytes (200.0 KB)
-   📋 Tables: meta, urls, sqlite_sequence
-      (and 2 more...)
+   ⚠️  Has urls table but no external URLs
+   📊 Total URLs: 2 (all internal DuckDuckGo pages)
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\subscription-v1.db
    Size: 12,288 bytes (12.0 KB)
-   ⚠️  Cannot read as SQLite database
+      ❌ Error: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\R_TAKI~1\\AppData\\Local\\Temp\\tmpiwm5auxf.db'
+   ⚠️  Not a SQLite database (might be encrypted at file level)
+   🔍 Header (hex): 785b7b387d9ae25e67c34fbb398413ce
+   🔍 Header (ascii): b'x[{8}\x9a\xe2^g\xc3O\xbb9\x84\x13\xce'
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\vault-v1.db
    Size: 73,728 bytes (72.0 KB)
-   ⚠️  Cannot read as SQLite database
+      ❌ Error: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\R_TAKI~1\\AppData\\Local\\Temp\\tmpe1ggqcbv.db'
+   ⚠️  Not a SQLite database (might be encrypted at file level)
+   🔍 Header (hex): 53477a200fdb4968f45f9628a8aeb10e
+   🔍 Header (ascii): b'SGz \x0f\xdbIh\xf4_\x96(\xa8\xae\xb1\x0e'
 
 ────────────────────────────────────────────────────────────────────────────────
 📄 LocalState\vpn-v1.db
    Size: 12,288 bytes (12.0 KB)
-   ⚠️  Cannot read as SQLite database
+      ❌ Error: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\R_TAKI~1\\AppData\\Local\\Temp\\tmpuz8hhks0.db'
+   ⚠️  Not a SQLite database (might be encrypted at file level)
+   🔍 Header (hex): 3ed96eb043f3c15d71f2d4a5c627d674
+   🔍 Header (ascii): b">\xd9n\xb0C\xf3\xc1]q\xf2\xd4\xa5\xc6'\xd6t"
 
 ================================================================================
-
-
-================================================================================
-SEARCH COMPLETE
+SCAN COMPLETE
 ================================================================================
