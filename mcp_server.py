@@ -103,6 +103,41 @@ def cocoa_timestamp_to_datetime(cocoa_timestamp: float) -> str:
         return "Invalid timestamp"
 
 
+def find_windows_store_app_path(app_name: str) -> Path:
+    """
+    Find Windows Store app history path by searching for package directory.
+
+    Args:
+        app_name: Partial name to search for in package folders (e.g., 'Arc', 'DuckDuckGo')
+
+    Returns:
+        Path to History file if found, None otherwise
+    """
+    if os.name != 'nt':
+        return None
+
+    packages_dir = Path.home() / "AppData" / "Local" / "Packages"
+
+    if not packages_dir.exists():
+        return None
+
+    try:
+        # Search for matching package directory
+        for package in packages_dir.iterdir():
+            if app_name.lower() in package.name.lower():
+                # Search for History file in this package
+                for history_file in package.rglob("History"):
+                    if history_file.is_file():
+                        # Accept if path contains "User Data" (Arc) or "EBWebView" (DuckDuckGo)
+                        path_str = str(history_file)
+                        if "User Data" in path_str or "EBWebView" in path_str:
+                            return history_file
+    except Exception:
+        pass
+
+    return None
+
+
 def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox", "edge", "arc", "opera", "duckduckgo"] = "brave") -> Path:
     """
     Get the path to the browser history database.
@@ -115,8 +150,13 @@ def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox",
     if browser == "duckduckgo":
         # DuckDuckGo browser paths
         if os.name == 'nt':  # Windows
-            # DuckDuckGo for Windows (Chromium-based, no encryption)
-            history_path = Path.home() / "AppData" / "Local" / "DuckDuckGo" / "User Data" / "Default" / "History"
+            # Try Windows Store version first
+            store_path = find_windows_store_app_path("DuckDuckGo")
+            if store_path:
+                history_path = store_path
+            else:
+                # Fall back to standard installation (Chromium-based, no encryption)
+                history_path = Path.home() / "AppData" / "Local" / "DuckDuckGo" / "User Data" / "Default" / "History"
         elif platform.system() == 'Darwin':  # macOS
             # DuckDuckGo for macOS (uses encryption)
             history_path = Path.home() / "Library/Containers/com.duckduckgo.mobile.ios/Data/Library/Application Support/Database.sqlite"
@@ -151,7 +191,13 @@ def get_history_db_path(browser: Literal["brave", "safari", "chrome", "firefox",
     elif browser == "arc":
         # Arc Browser (Chromium-based)
         if os.name == 'nt':  # Windows
-            history_path = Path.home() / "AppData" / "Local" / "Arc" / "User Data" / "Default" / "History"
+            # Try Windows Store version first
+            store_path = find_windows_store_app_path("Arc")
+            if store_path:
+                history_path = store_path
+            else:
+                # Fall back to standard installation
+                history_path = Path.home() / "AppData" / "Local" / "Arc" / "User Data" / "Default" / "History"
         elif platform.system() == 'Darwin':  # macOS
             history_path = Path.home() / "Library" / "Application Support" / "Arc" / "User Data" / "Default" / "History"
         else:  # Linux
