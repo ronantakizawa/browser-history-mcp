@@ -101,7 +101,7 @@ def test_browser_paths_and_history():
         print("Make sure mcp_server.py is in the same directory.")
         return False
 
-    browsers = ['brave', 'chrome', 'edge', 'firefox', 'opera']
+    browsers = ['brave', 'chrome', 'edge', 'firefox', 'opera', 'arc', 'duckduckgo']
     results = []
     browsers_with_history = []
 
@@ -171,7 +171,7 @@ def test_search_functionality():
         print(f"❌ Error importing: {e}")
         return False
 
-    browsers = ['brave', 'chrome', 'edge', 'firefox', 'opera']
+    browsers = ['brave', 'chrome', 'edge', 'firefox', 'opera', 'arc', 'duckduckgo']
     search_term = input("\nEnter a search term to find in your browser history (or press Enter to skip): ").strip()
 
     if not search_term:
@@ -251,7 +251,7 @@ def test_macos_only_browsers():
     except ImportError:
         return False
 
-    macos_browsers = ['safari', 'arc', 'duckduckgo']
+    macos_browsers = ['safari']
     results = []
 
     for browser in macos_browsers:
@@ -285,7 +285,7 @@ def test_most_visited():
         print(f"❌ Error importing: {e}")
         return False
 
-    browsers = ['brave', 'chrome', 'edge', 'firefox', 'opera']
+    browsers = ['brave', 'chrome', 'edge', 'firefox', 'opera', 'arc', 'duckduckgo']
 
     for browser in browsers:
         try:
