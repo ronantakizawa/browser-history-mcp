@@ -8,7 +8,13 @@ Access and search your browser search history (Brave, Chrome, Firefox, Safari, E
 
 Supported for MacOS, Windows, and Linux.
 
+## Use Cases
+
 ## Features
+
+- **Brainstorming**: Brainstorm project ideas inspired by your interests and search history.
+- **Search History Analysis**: Find connections between your search history.
+- **Profile Generation**: Build a personal profile based on your search history.
 
 This MCP server provides three tools to interact with your search history:
 
