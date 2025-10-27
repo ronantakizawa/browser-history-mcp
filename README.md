@@ -6,6 +6,8 @@
 
 Access and search your browser search history (Brave, Chrome, Firefox, Safari, Edge, Arc, Opera, DuckDuckGo) through an MCP server for LLM chat apps.
 
+Supported for MacOS, Windows, and Linux.
+
 ## Features
 
 This MCP server provides three tools to interact with your search history:
