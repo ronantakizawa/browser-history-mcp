@@ -8,6 +8,12 @@ Access and search your browser search history (Brave, Chrome, Firefox, Safari, E
 
 Supported for MacOS, Windows, and Linux.
 
+
+
+https://github.com/user-attachments/assets/19c6de51-8219-453d-9b36-d584c44fbe9f
+
+
+
 ## Use Cases
 
 - **Brainstorming**: Brainstorm project ideas inspired by your interests and search history.
