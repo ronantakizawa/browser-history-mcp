@@ -2,7 +2,9 @@
 
 <img width="1024" height="512" alt="browser-histo (2)" src="https://github.com/user-attachments/assets/9bd134ed-b400-45ae-8134-9c3f854989b3" />
 
-
+<a href="https://glama.ai/mcp/servers/@ronantakizawa/search-history-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@ronantakizawa/search-history-mcp/badge" alt="Search History Server MCP server" />
+</a>
 
 Access and search your browser search history (Brave, Chrome, Firefox, Safari, Edge, Arc, Opera, DuckDuckGo) through an MCP server for LLM chat apps.
 
@@ -43,4 +45,4 @@ This server reads your local browser history databases in read-only mode. It cre
 
 **Browser Support**: Brave, Chrome, Edge, Opera, Arc, and DuckDuckGo are supported on Windows, macOS, and Linux. Firefox is supported on all platforms. Safari is macOS-only.
 
-Browser file paths may have to be manually configured depending on your file structures. 
+Browser file paths may have to be manually configured depending on your file structures.
